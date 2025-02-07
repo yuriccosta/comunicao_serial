@@ -42,10 +42,12 @@
 // Declaração de variáveis globais
 PIO pio;
 uint sm;
+ssd1306_t ssd; // Inicializa a estrutura do display
 static volatile uint num = 0; // Variável para contar o número atual
 static volatile uint32_t last_time = 0; // Variável para armazenar o tempo do último evento
 static volatile uint green_state = 0; // Variável para armazenar o estado do LED verde
 static volatile uint blue_state = 0; // Variável para armazenar o estado do LED azul
+
 
 double padrao_led[10][LED_COUNT] = {
         {0, 1, 1, 1, 0,
@@ -141,25 +143,47 @@ static void gpio_irq_handler(uint gpio, uint32_t events) {
     // Verificação de tempo para debounce
     if (current_time - last_time > 200){
         if(gpio == BUTTON_PIN_A){
-          green_state = !green_state;
-          gpio_put(LED_PIN_GREEN, green_state);
+            green_state = !green_state;
+            gpio_put(LED_PIN_GREEN, green_state);
 
-          printf("Botão A pressionado\n");
-          printf("Estado do led verde: %u\n", green_state);
+            char string[13];
+            snprintf(string, 13, "Led verde %u\n", green_state);
+
+            printf("Botão A pressionado\n");
+            printf(string);
+
+            // Atualiza o conteúdo do display com animações
+            ssd1306_fill(&ssd, true); // Limpa o display
+            ssd1306_rect(&ssd, 3, 3, 122, 58, false, true); // Desenha um retângulo
+            ssd1306_draw_string(&ssd, "Botao A", 8, 10); // Desenha uma string
+            ssd1306_draw_string(&ssd, "pressionado", 8, 20); // Desenha uma string
+            ssd1306_draw_string(&ssd, string, 8, 30); // Desenha uma string
+            ssd1306_send_data(&ssd); // Atualiza o display
+
         } else if(gpio == BUTTON_PIN_B){
-          blue_state = !blue_state;
-          gpio_put(LED_PIN_BLUE, blue_state);
+            blue_state = !blue_state;
+            gpio_put(LED_PIN_BLUE, blue_state);
 
-          printf("Botão B pressionado\n");
-          printf("Estado do led azul: %u\n", blue_state);
+            char string[13];
+            snprintf(string, 13, "Led azul %u\n", blue_state);
+
+            printf("Botão B pressionado\n");
+            printf(string);
+
+            // Atualiza o conteúdo do display com animações
+            ssd1306_fill(&ssd, true); // Limpa o display
+            ssd1306_rect(&ssd, 3, 3, 122, 58, false, true); // Desenha um retângulo
+            ssd1306_draw_string(&ssd, "Botao B", 8, 10); // Desenha uma string
+            ssd1306_draw_string(&ssd, "pressionado", 8, 20); // Desenha uma string
+            ssd1306_draw_string(&ssd, string, 8, 30); // Desenha uma string
+            ssd1306_send_data(&ssd); // Atualiza o display
         }
 
         last_time = current_time; // Atualiza o tempo do último evento
     }
 }
 
-int main()
-{
+int main(){
   // I2C Initialisation. Using it at 400Khz.
   i2c_init(I2C_PORT, 400 * 1000);
 
@@ -167,7 +191,6 @@ int main()
   gpio_set_function(I2C_SCL, GPIO_FUNC_I2C); // Set the GPIO pin function to I2C
   gpio_pull_up(I2C_SDA); // Pull up the data line
   gpio_pull_up(I2C_SCL); // Pull up the clock line
-  ssd1306_t ssd; // Inicializa a estrutura do display
   ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); // Inicializa o display
   ssd1306_config(&ssd); // Configura o display
   ssd1306_send_data(&ssd); // Envia os dados para o display
@@ -175,8 +198,6 @@ int main()
   // Limpa o display. O display inicia com todos os pixels apagados.
   ssd1306_fill(&ssd, false);
   ssd1306_send_data(&ssd);
-
-  bool cor = true;
 
   // Configuração do PIO
   pio = pio0; 
@@ -220,17 +241,8 @@ int main()
   gpio_set_irq_enabled_with_callback(BUTTON_PIN_A, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
   gpio_set_irq_enabled_with_callback(BUTTON_PIN_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
-  while (true){
-    cor = !cor;
-    // Atualiza o conteúdo do display com animações
-    ssd1306_fill(&ssd, !cor); // Limpa o display
-    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
-    ssd1306_draw_string(&ssd, "CEPEDI   TIC37", 8, 10); // Desenha uma string
-    ssd1306_draw_string(&ssd, "EMBARCATECH", 20, 30); // Desenha uma string
-    ssd1306_draw_string(&ssd, "prof wilton", 15, 48); // Desenha uma string      
-    ssd1306_send_data(&ssd); // Atualiza o display
-
-    if (stdio_usb_connected()){ // Certifica-se de que o USB está conectado
+    while (true){
+        if (stdio_usb_connected()){ // Certifica-se de que o USB está conectado
             char c;
             if (scanf("%c", &c) == 1){ // Lê caractere da entrada padrão
                 printf("Recebido: '%c'\n", c);
@@ -238,20 +250,18 @@ int main()
                 if (c <= '9' && c >= '0'){
                     num = c - '0';
                     display_num(num);
-                } else{
-                    switch (c){
-                    case 'r':
-                        gpio_put(LED_PIN_RED, 1);
-                        break;
-                    default:
-                        printf("Comando inválido: '%c'\n", c);
-                    }
                 }
+
+                char string[2] = {c, '\0'};
+                // Atualiza o conteúdo do display com animações
+                ssd1306_fill(&ssd, true); // Limpa o display
+                ssd1306_rect(&ssd, 3, 3, 122, 58, false, true); // Desenha um retângulo
+                ssd1306_draw_string(&ssd, string, 8, 10); // Desenha uma string 
+                ssd1306_send_data(&ssd); // Atualiza o display
             }
         }
-    //sleep_ms(40);
-    
+        sleep_ms(100);
+    }
 
-    sleep_ms(1000);
-  }
+    return 0;
 }
