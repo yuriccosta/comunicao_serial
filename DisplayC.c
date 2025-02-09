@@ -29,7 +29,6 @@
 PIO pio;
 uint sm;
 ssd1306_t ssd; // Inicializa a estrutura do display
-static volatile uint num = 0; // Variável para contar o número atual
 static volatile uint32_t last_time = 0; // Variável para armazenar o tempo do último evento
 static volatile uint green_state = 0; // Variável para armazenar o estado do LED verde
 static volatile uint blue_state = 0; // Variável para armazenar o estado do LED azul
@@ -234,7 +233,7 @@ int main(){
                 printf("Recebido: '%c'\n", c);
                 
                 if (c <= '9' && c >= '0'){
-                    num = c - '0';
+                    int num = c - '0';
                     display_num(num);
                 }
 
