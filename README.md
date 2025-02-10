@@ -19,3 +19,7 @@ Este projeto demonstra o uso de um display OLED SSD1306 controlado via I2C utili
 - **Interação via USB**:
   - Conecte a Raspberry Pi Pico ao computador via USB.
   - Envie caracteres via terminal serial para exibir números na matriz de LEDs e caracteres no display OLED.
+
+## Vídeo de Demonstração
+Assista à demonstração do projeto em execução:  
+[Vídeo Demonstrativo](https://youtu.be/Sk6ZKTkPAhQ)  
