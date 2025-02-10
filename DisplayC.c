@@ -184,6 +184,7 @@ int main(){
   ssd1306_fill(&ssd, false);
   ssd1306_send_data(&ssd);
 
+  
   // Configuração do PIO
   pio = pio0; 
   bool ok;
